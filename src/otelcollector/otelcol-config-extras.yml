@@ -2,3 +2,38 @@
 # SPDX-License-Identifier: Apache-2.0
 # extra settings to be merged into OpenTelemetry Collector configuration
 # do not delete this file
+exporters:
+  logzio/traces:
+    account_token: "<<TRACING-SHIPPING-TOKEN>>"
+    region: "<<LOGZIO_ACCOUNT_REGION_CODE>>"
+
+  prometheusremotewrite:
+    endpoint: "https://<<LISTENER-HOST>>:8053"
+    headers:
+      Authorization: "Bearer <<METRICS-SHIPPING-TOKEN>>"
+
+  logzio/logs:
+    account_token: "<<LOGS-SHIPPING-TOKEN>>"
+    region: "<<LOGZIO_ACCOUNT_REGION_CODE>>"
+
+processors:
+  batch:
+    send_batch_size: 10000
+    timeout: 1s
+    
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logzio/traces, logzio/logs, spanmetrics]
+
+    metrics:
+      receivers: [otlp, spanmetrics]
+      exporters: [prometheusremotewrite]
+
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logzio/logs]
+      
